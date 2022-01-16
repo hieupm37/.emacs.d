@@ -26,6 +26,9 @@
 (eval-when-compile
   (require 'use-package))
 
+;; Use to keep modeline clean.
+(use-package diminish :ensure t)
+
 (require 'vc)
 (setq vc-follow-symlinks t)
 
@@ -41,6 +44,7 @@
 (setq ring-bell-function #'ignore)
 (setq initial-buffer-choice t)  ; open *scratch* buffer at startup.
 
+;; Use y/n instead of yes/no
 (defalias 'yes-or-no-p 'y-or-n-p)
 
 (dolist (cmd '(narrow-to-region
@@ -104,14 +108,10 @@
   :hook ((after-init-hook . my/setup-font)
          (after-init-hook . column-number-mode)))
 
+;; Setup theme
 (use-package emacs
   :config
   (load-theme 'wombat))
-
-;; (use-package zenburn-theme
-;;   :ensure t
-;;   :hook (after-init-hook . (lambda ()
-;;            (load-theme 'zenburn t))))
 
 ;; Refine window borders
 (use-package emacs
@@ -243,18 +243,9 @@ With \\[universal-argument], copy relative path to project root."
 
   :bind (("C-M-SPC" . my/mark-dwim)))
 
-(use-package diminish :ensure t)
-
 (use-package eldoc :diminish)
 
-(use-package gcmh
-  :ensure t
-  :diminish
-  :config
-  (setq gcmh-high-cons-threshold 80000000)
-  (setq gcmh-idle-delay 5)
-  (gcmh-mode))
-
+;; Move custom variables to temporary file to make init.el clean.
 (use-package cus-edit
   :config
   (setq custom-file (make-temp-file "emacs-custom-")))
@@ -272,6 +263,7 @@ With \\[universal-argument], copy relative path to project root."
 (setq-default bidi-paragraph-direction 'left-to-right)
 (setq bidi-inhibit-bpa t)
 
+;; Better handle very long lines in Emacs.
 (use-package so-long
   :config
   (global-so-long-mode 1))
@@ -292,12 +284,12 @@ With \\[universal-argument], copy relative path to project root."
   (defun my/orderless-initialism-dispatcher (pattern _index _total)
     "Leading initalism dispatcher using comma sign as a suffix."
     (when (string-suffix-p "," pattern)
-      `(orderless-strict-leading-initialism . ,(substring pattern 0 -1))))
+      `(orderless-initialism . ,(substring pattern 0 -1))))
 
   (setq orderless-matching-styles
         '(orderless-prefixes
           orderless-literal
-          orderless-strict-leading-initialism
+          orderless-initialism
           orderless-regexp
           orderless-flex))
   (setq orderless-style-dispatchers
@@ -326,34 +318,6 @@ With \\[universal-argument], copy relative path to project root."
               :map minibuffer-local-filename-completion-map
               ("<C-backspace>" . my/up-directory)))
 
-;; Use selectrum for selection narrowing
-;; (use-package selectrum
-;;   :ensure t
-;;   :after orderless
-;;   :config
-;;   (setq selectrum-refine-candidates-function #'orderless-filter)
-;;   (setq selectrum-highlight-candidates-function #'orderless-highlight-matches)
-;;   (setq selectrum-completion-in-region-styles completion-styles)
-;;   :hook (after-init-hook . (lambda ()
-;;            (selectrum-mode +1)))
-;;   :bind (:map selectrum-minibuffer-map
-;;               ("<C-backspace>" . my/up-directory)))
-
-;; Enhance sorting and filtering
-;; (use-package selectrum-prescient
-;;   :ensure t
-;;   :config
-;;   ;; To make sorting and filtering more intelligent
-;;   (setq selectrum-prescient-enable-filtering nil) ; selectrum uses orderless
-;;   (setq selectrum-prescient-enable-sorting t) ; selectrum uses prescient for sorting
-;;   (selectrum-prescient-mode +1)
-
-;;   ;; To save the command history on disk so the sorting get more intelligent
-;;   ;; overtime.
-;;   (setq prescient-save-file (expand-file-name "prescient" user-emacs-directory))
-;;   (setq prescient-history-length 200)
-;;   (prescient-persist-mode +1))
-
 ;; Use vertico for narrowing selections
 (use-package vertico
   :ensure t
@@ -365,6 +329,7 @@ With \\[universal-argument], copy relative path to project root."
   :bind (:map vertico-map
               ("<C-backspace>" . my/up-directory)))
 
+;; Add more information to completion candidates.
 (use-package marginalia
   :ensure t
   :init
@@ -609,10 +574,10 @@ With \\[universal-argument], copy relative path to project root."
   :config
   (setq save-interprogram-paste-before-kill t))
 
-;; Auto add empty newline for file ending.
+;; Auto add empty newline for file ending when save.
 (use-package emacs
   :config
-  (setq mode-require-final-newline 'visit-save))
+  (setq mode-require-final-newline t))
 
 ;; Prefer spaces over tab
 (use-package emacs
@@ -867,11 +832,13 @@ simpler."
   :ensure t
   :mode ("\\.groovy\\'"))
 
-;; Mode for js file
+;; Mode for js, ts file
 (use-package js
   :config
   (setq indent-tabs-mode nil)
-  (setq js-indent-level 2))
+  (setq js-indent-level 2)
+  :mode (("\\.js\\'" . js-mode)
+         ("\\.ts\\'" . js-mode)))
 
 ;; Mode for html file
 (use-package sgml-mode
@@ -897,17 +864,17 @@ simpler."
   :bind (("C-x C-;" . my/comment-dwim)))
 
 ;; Compile directly from Emacs
-(use-package compile
-  :config
-  (setq compilation-scroll-output t)
-
-  (defun my/build_browser ()
-    (interactive)
-    (let ((project_root (locate-dominating-file default-directory ".git")))
-      (when project_root
-        (with-temp-buffer
-          (cd project_root)
-          (compile "ninja -C src\\out\\Debug chrome"))))))
+;; (use-package compile
+;;   :config
+;;   (setq compilation-scroll-output t)
+;;
+;;   (defun my/build_browser ()
+;;     (interactive)
+;;     (let ((project_root (locate-dominating-file default-directory ".git")))
+;;       (when project_root
+;;         (with-temp-buffer
+;;           (cd project_root)
+;;           (compile "ninja -C src\\out\\Debug chrome"))))))
 
 ;;; Applications and utilities
 
