@@ -137,6 +137,11 @@
   :config
   (mouse-avoidance-mode 'animate))
 
+;; Use ace-window to switch between windows
+(use-package ace-window
+  :ensure t
+  :bind ("M-o" . ace-window))
+
 ;;; General commands for lines
 (use-package emacs
   :config
@@ -155,7 +160,7 @@
     (indent-according-to-mode))
 
   :bind (("M-SPC" . cycle-spacing)
-         ("M-o" . delete-blank-lines)  ; alias for C-x C-o
+         ;; ("M-o" . delete-blank-lines)  ; alias for C-x C-o
          ("<C-return>" . my/new-line-below)
          ("<C-S-return>" . my/new-line-above)))
 
@@ -712,6 +717,45 @@ With \\[universal-argument], copy relative path to project root."
 ;;     (?e "Eshell" project-eshell)))
 ;;   :bind (("C-x p q" . project-query-replace-regexp)
 ;;    ("C-x p l" . my/project-commit-log)))
+
+;; Tie objects - actions with embark
+;; Thanks to https://karthinks.com/software/fifteen-ways-to-use-embark/
+(use-package embark
+  :ensure t
+  :init
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+  :config
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none))))
+
+  (use-package ace-window
+    :config
+    (defmacro my/embark-ace-action (fn)
+      `(defun ,(intern (concat "my/embark-ace-" (symbol-name fn))) ()
+         (interactive)
+         (with-demoted-errors "%s"
+           ;; (require 'ace-window)
+           (let ((aw-dispatch-always t))
+             (aw-switch-to-window (aw-select nil))
+             (call-interactively (symbol-function ',fn))))))
+
+    (my/embark-ace-action find-file)
+    (my/embark-ace-action switch-to-buffer)
+    (my/embark-ace-action bookmark-jump)
+
+    :bind (:map embark-file-map
+                ("o" . my/embark-ace-find-file)
+                :map embark-buffer-map
+                ("o" . my/embark-ace-switch-to-buffer)
+                :map embark-bookmark-map
+                ("o" . my/embark-ace-bookmark-jump)))
+
+  :bind (("C-." . embark-act)))
+
 
 ;;; Development settings
 
