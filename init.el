@@ -394,6 +394,13 @@ With \\[universal-argument], copy relative path to project root."
          ("M-e" . consult-isearch)
          ("M-s e" . consult-isearch)))
 
+;; Insert directory paths into minibuffer prompts.
+(use-package consult-dir
+  :ensure t
+  :bind (("C-x C-d" . consult-dir)
+         :map vertico-map
+         ("C-x C-d" . consult-dir)))
+
 ;; Dynamic word completions
 (use-package dabbrev
   :config
