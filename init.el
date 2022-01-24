@@ -761,7 +761,13 @@ With \\[universal-argument], copy relative path to project root."
                 :map embark-bookmark-map
                 ("o" . my/embark-ace-bookmark-jump)))
 
-  :bind (("C-." . embark-act)))
+  :bind (("C-," . embark-act)
+         :map vertico-map
+         ("C-M-," . embark-export)))
+
+(use-package embark-consult
+  :ensure t
+  :after embark, consult)
 
 
 ;;; Development settings
