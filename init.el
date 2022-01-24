@@ -300,28 +300,8 @@ With \\[universal-argument], copy relative path to project root."
   (setq orderless-style-dispatchers
         '(my/orderless-literal-dispatcher
           my/orderless-initialism-dispatcher))
-  :bind (:map minibuffer-local-completion-map
-              ;; SPC should never complete, use it for `orderless' groups.
-              ("SPC" . nil)
-              ("?" . nil)))
 
-;; Minibuffer configuration
-(use-package minibuffer
-  :config
-  (setq completion-styles '(partial-completion substring flex orderless))
-
-  (defun my/up-directory (arg)
-    "Move up a directory (delete backwards to /)."
-    (interactive "p")
-    (if (string-match-p "/." (minibuffer-contents))
-        (zap-up-to-char (- arg) ?/)
-      (delete-minibuffer-contents)))
-
-  :bind (:map minibuffer-local-completion-map
-              ("C-j" . exit-minibuffer)
-              ("<tab>" . minibuffer-force-complete)
-              :map minibuffer-local-filename-completion-map
-              ("<C-backspace>" . my/up-directory)))
+  (setq completion-styles '(partial-completion substring flex orderless)))
 
 ;; Use vertico for narrowing selections
 (use-package vertico
@@ -332,6 +312,7 @@ With \\[universal-argument], copy relative path to project root."
   :config
   (setq vertico-cycle t)
   :bind (:map vertico-map
+              ("C-j" . vertico-exit)
               ("<C-backspace>" . my/up-directory)))
 
 ;; Add more information to completion candidates.
