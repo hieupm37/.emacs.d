@@ -311,6 +311,14 @@ With \\[universal-argument], copy relative path to project root."
   (vertico-mode)
   :config
   (setq vertico-cycle t)
+
+  (defun my/up-directory (arg)
+    "Move up a directory (delete backwards to /)."
+    (interactive "p")
+    (if (string-match-p "/." (minibuffer-contents))
+        (zap-up-to-char (- arg) ?/)
+      (delete-minibuffer-contents)))
+
   :bind (:map vertico-map
               ("C-j" . vertico-exit)
               ("<C-backspace>" . my/up-directory)))
