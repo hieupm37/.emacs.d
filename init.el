@@ -1278,4 +1278,9 @@ simpler."
   (setq org-src-tab-acts-natively t)
   (setq org-edit-src-content-indentation 0))
 
+(use-package markdown-mode
+  :ensure t
+  :mode ("README\\.md\\'" . gfm-mode)
+  :init (setq markdown-command "multimarkdown"))
+
 ;;; init.el ends here
