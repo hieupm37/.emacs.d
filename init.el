@@ -2,16 +2,49 @@
 
 ;;; Code
 
+;; Profile emacs startup
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "Emacs loaded in %s."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time))))))
+
 (require 'package)
 
 (add-to-list 'package-archives
-       '("melpa" . "https://melpa.org/packages/"))
+             '("melpa" . "https://melpa.org/packages/"))
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+(defvar my/list-external-packages nil
+  "List of external packages used by `my/ensure-packages-installed'")
 
-(eval-and-compile
+(defun my/ensure-external-packages-installed ()
+  "Install all `my/list-external-packages' packages if needed."
+  (interactive)
+  (when (yes-or-no-p (format "Try to install %d packages?"
+                             (length my/list-external-packages)))
+    (package-refresh-contents)
+    (mapc (lambda (package)
+            (unless (package-installed-p package)
+              (package-install package)))
+          my/list-external-packages)))
+
+(defmacro my/external-package (package &rest body)
+  "Setup PACKAGE from elpa and do configuration with BODY"
+  (declare (indent 1))
+  `(progn
+     (when (not (package-installed-p ,package))
+       (package-install ,package))
+     (if (require ,package nil 'noerror)
+         (progn ,@body)
+       (display-warning 'my (format "Loading `%s' failed." ,package) :warning)
+       (add-to-list 'my/list-external-packages ,package)
+       (display-warning
+        'my
+        "Run `my/ensure-external-packages-installed' to manually install missing package"
+        :warning))))
+
+(my/external-package 'use-package
   (setq use-package-always-ensure nil)
   (setq use-package-always-defer nil)
   (setq use-package-always-demand nil)
@@ -23,19 +56,11 @@
   ;; For example: after-init => `after-init-hook'
   (setq use-package-hook-name-suffix nil))
 
-(eval-when-compile
-  (require 'use-package))
-
 ;; Use to keep modeline clean.
 (use-package diminish :ensure t)
 
 (require 'vc)
 (setq vc-follow-symlinks t)
-
-;; Change startup directory on Windows to HOME directory.
-(when (eq system-type 'windows-nt)
-  (cd "~/")
-  (setenv "LANG" "en_US"))
 
 ;; Some basic settings
 (setq frame-title-format '("Emacs - " (:eval (if (buffer-file-name)
@@ -1016,5 +1041,8 @@ simpler."
       (load-file el)
     (require 'org)
     (org-babel-load-file org)))
+
+;; Make GC pauses faster by decreasing the threshold.
+(setq gc-cons-threshold (* 2 1000 1000))
 
 ;;; init.el ends here
