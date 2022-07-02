@@ -1,0 +1,217 @@
+#+TITLE: Emacs configuration
+#+AUTHOR: hieupm37
+#+EMAIL: hieupm37@gmail.com
+
+* Org mode configurations
+
+Keyboard bindings table for org mode
+
+| Command                                            | Bindings |
+|----------------------------------------------------+----------|
+| New section with same level                        | M-RET    |
+| Insert source code block                           | C-c C-,  |
+| Open/Close editing source code block in new buffer | C-c '    |
+
+
+#+begin_src emacs-lisp
+(require 'org)
+
+;; New section with the same level without spliting line
+(setq org-M-RET-may-split-line '((default . nil)))
+
+;; Insert src templates
+(setq org-structure-template-alist
+      '(("s" . "src")
+        ("E" . "src emacs-lisp")
+        ("e" . "example")
+        ("q" . "quote")))
+
+;; Show invisible region when editing
+(setq org-catch-invisible-edits 'show)
+
+(setq org-imenu-depth 7)
+
+;; Edit src block in a new buffer, start with C-c ' and close with C-c ', save with C-x C-s
+(setq org-src-window-setup 'current-window)
+(setq org-edit-src-persistent-message nil)
+(setq org-src-preserve-indentation t)
+(setq org-edit-src-content-indentation 0)
+#+end_src
+
+** GTD setup
+
+The GTD setup is mostly taken from https://github.com/rougier/emacs-gtd
+
+The steps to do GTD:
+1. *Capture* anything across your mind with C-c c or C-c i for inbox.
+2. *Clarify* what you've captured into clear and concrete action steps.
+   Set schedule with C-c C-s or deadline with C-c C-d. Plain timestamp with C-c .
+   Add tags with C-c C-c on headline.
+   Estimate with C-c C-x e
+3. *Organize* and put everything into right place.
+   Refile section with C-c C-w into projects.
+4. *Review*, update and revise task lists.
+   Change to next action with C-c C-t.
+5. *Engage*, work on important stuffs.
+   Update progress indicator with C-c C-c on [/].
+   Clock in with C-c C-x C-i, clock out with C-c C-x C-o.
+
+Total set of commands for GTD:
+
+| Command                          | Bindigs         | Mode + Where         |
+|----------------------------------+-----------------+----------------------|
+| Agenda                           | C-c a           | any                  |
+| Agenda for today                 | C-c a a         | any                  |
+| Capture menu                     | C-c c           | any                  |
+| Capture generic TODO (inbox.org) | C-c i (C-c c i) | any                  |
+| Add/Remove tag                   | C-c C-c         | org-mode on headline |
+| Update progress indicator        | C-c C-c         | org-mode on [/]      |
+| Update all progress indicators   | C-u C-c #       | org-mode             |
+| Enter estimated effort           | C-c C-x e       | org-mode on headline |
+| Refile section                   | C-c C-w         | org-mode on headline |
+| Clock in                         | C-c C-x C-i     | org-mode on headline |
+| Clock out                        | C-c C-x C-o     | org-mode on headline |
+| Plain timestamp                  | C-c .           | org-mode             |
+| Scheduled timestamp              | C-c C-s         | org-mode             |
+| Deadline timestamp               | C-c C-d         | org-mode             |
+
+
+Here is the source code.
+
+#+begin_src emacs-lisp
+(require 'org)
+
+;; Files
+(setq org-directory "~/org")
+(setq org-agenda-files '("inbox.org" "notes.org" "projects.org" "agenda.org"))
+(setq org-default-notes-file "~/org/notes.org")
+
+;; Capture
+(setq org-capture-templates
+      `(("i" "Inbox" entry (file "inbox.org")
+         ,(concat "* TODO %^{Title}\n"
+                  ":PROPERTIES:\n"
+                  ":CAPTURED: %U\n"
+                  ":END:\n\n"
+                  "%i%?"))
+        ("n" "Note" entry (file "notes.org")
+         ,(concat "* %^{Title}\n"
+                  ":PROPERTIES:\n"
+                  ":CAPTURED: %U\n"
+                  ":END\n\n"
+                  "%i%?"))))
+
+(define-key global-map (kbd "C-c c") 'org-capture)
+
+(defun my/org-capture-inbox ()
+  "Capture idea directly to inbox.org"
+  (interactive)
+  (call-interactively 'org-store-link)
+  (org-capture nil "i"))
+
+(define-key global-map (kbd "C-c i") 'my/org-capture-inbox)
+
+(defun my/org-capture-no-delete-windows (oldfun args)
+  (cl-letf (((symbol-function 'delete-other-windows) 'ignore))
+    (apply oldfun args)))
+
+(advice-add 'org-capture-place-template
+            :around 'my/org-capture-no-delete-windows)
+
+;; Refile
+(require 'org-refile)
+
+(setq org-refile-use-outline-path 'file)
+(setq org-outline-path-complete-in-steps nil)
+(setq org-refile-use-cache t)
+(setq org-refile-targets
+      '(("projects.org" :regexp . "\\(?:\\(?:Note\\|Task\\)s\\)")))
+
+;; Regenerate refile cache everytime Emacs has been idled for 5 minutes
+(run-with-idle-timer 300 t (lambda ()
+                             (org-refile-cache-clear)
+                             (org-refile-get-targets)))
+
+;; Automatic save after refilling
+(defun my/gtd-save-org-buffers ()
+  "Save `org-agenda-files' buffers without user confirmation."
+  (interactive)
+  (message "Saving org-agenda-files buffers...")
+  (save-some-buffers t (lambda ()
+                         (when (member (buffer-name) org-agenda-files)
+                           t)))
+  (message "Saving org-agenda-files buffers... done"))
+(advice-add 'org-refile :after
+            (lambda (&rest _)
+              (my/gtd-save-org-buffers)))
+
+;; TODO
+(setq org-todo-keywords
+      '((sequence "TODO(t)" "NEXT(n)" "HOLD(h" "|" "DONE(d)" "CANCEL(c)")))
+
+(setq org-log-done 'time)
+(defun my/log-todo-next-creation-date (&rest ignore)
+  "Log NEXT creation time in the properties under the key ACTIVATED"
+  (when (and (string= (org-get-todo-state) "NEXT")
+             (not (org-entry-get nil "ACTIVATED")))
+    (org-entry-put nil "ACTIVATED" (format-time-string "[%Y-%m-%d]"))))
+(add-hook 'org-after-todo-state-change-hook #'my/log-todo-next-creation-date)
+
+;; Agenda
+
+(define-key global-map (kbd "C-c a") 'org-agenda)
+
+;; Some configurations for agenda view
+(setq org-agenda-hide-tags-regexp ".")
+(setq org-agenda-window-setup 'current-window)
+(setq org-deadline-warning-days 5)
+(setq org-agenda-skip-scheduled-if-deadline-is-shown t)
+(setq org-agenda-skip-timestamp-if-deadline-is-shown t)
+(setq org-agenda-skip-deadline-prewarning-if-scheduled t)
+(setq org-scheduled-past-days 365)
+(setq org-deadline-warning-days 365)
+(setq org-agenda-current-time-string
+      "Now -·-·-·-·-·-·-")
+(setq org-agenda-time-grid
+      '((daily today require-timed)
+        (0600 0700 0800 0900 1000 1100
+              1200 1300 1400 1500 1600
+              1700 1800 1900 2000 2100)
+        " ....." "-----------------"))
+(setq org-agenda-prefix-format
+      '((agenda . " %i %-12:c%?-12t% s")
+        (todo   . " %i %-12:c")
+        (tags   . " %i %-12:c")
+        (search . " %i %-12:c")))
+;; Global todo list
+(setq org-agenda-todo-ignore-with-date t)
+(setq org-agenda-todo-ignore-timestamp t)
+(setq org-agenda-todo-ignore-scheduled t)
+(setq org-agenda-todo-ignore-deadlines t)
+(setq org-agenda-todo-ignore-time-comparison-use-seconds t)
+
+;; GTD agenda
+(setq org-agenda-custom-commands
+      '(("g" "Get Things Done (GTD)"
+         ((agenda ""
+                  ((org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'deadline))
+                   (org-deadline-warning-days 0)))
+          (todo "NEXT"
+                ((org-agenda-skip-function
+                  '(org-agenda-skip-entry-if 'deadline))
+                 (org-agenda-prefix-format "  %i %-12:c [%e] ")
+                 (org-agenda-overriding-header "\nTasks\n")))
+          (agenda nil
+                  ((org-agenda-entry-types '(:deadline))
+                   (org-agenda-format-date "")
+                   (org-deadline-warning-days 7)
+                   (org-agenda-skip-function
+                    '(org-agenda-skip-entry-if 'notregexp "\\* NEXT"))
+                   (org-agenda-overriding-header "\nDeadlines")))
+          (tags-todo "inbox"
+                     ((org-agenda-prefix-format "  %?-12t% s")
+                      (org-agenda-overriding-header "\nInbox\n")))
+          (tags "CLOSED>=\"<today>\""
+                ((org-agenda-overriding-header "\nCompleted today\n")))))))
+#+end_src
