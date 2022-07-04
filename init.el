@@ -1042,6 +1042,16 @@ simpler."
     (require 'org)
     (org-babel-load-file org)))
 
+;; Delete `emacs-init.el' when saving `emacs-init.org' file to update
+;; the configuration in the next launch.
+(defun my/delete-emacs-init-el-if-needed ()
+  (when (string= (buffer-file-name) (expand-file-name "emacs-init.org" user-emacs-directory))
+    (let ((filepath (expand-file-name "emacs-init.el" user-emacs-directory)))
+      (when (file-exists-p filepath)
+        (delete-file filepath)
+        (message (format "%s has deleted" filepath))))))
+(add-hook 'after-save-hook #'my/delete-emacs-init-el-if-needed)
+
 ;; Make GC pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))
 
