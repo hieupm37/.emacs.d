@@ -348,9 +348,9 @@ With \\[universal-argument], copy relative path to project root."
  "end"
  "Run `isearch-end-of-buffer' for the symbol at point.")
 
-(global-set-key (kbd "M-s %") #'em--isearch-replace-symbol-at-point)
-(global-set-key (kbd "M-s M-<") #'em--isearch-beginning-of-buffer)
-(global-set-key (kbd "M-s M->") #'em--isearch-end-of-buffer)
+(global-set-key (kbd "M-s %") #'my/isearch-replace-symbol-at-point)
+(global-set-key (kbd "M-s M-<") #'my/isearch-beginning-of-buffer)
+(global-set-key (kbd "M-s M->") #'my/isearch-end-of-buffer)
 
 (define-key isearch-mode-map (kbd "C-g") #'isearch-cancel)
 (define-key isearch-mode-map (kbd "M-/") #'isearch-complete)
@@ -408,8 +408,8 @@ With \\[universal-argument], copy relative path to project root."
   (indent-according-to-mode))
 
 (define-key global-map (kbd "M-SPC") #'cycle-spacing)
-(define-key global-map (kbd "<C-return>") #'em--new-line-below)
-(define-key global-map (kbd "<C-S-return>") #'em--new-line-above)
+(define-key global-map (kbd "<C-return>") #'my/new-line-below)
+(define-key global-map (kbd "<C-S-return>") #'my/new-line-above)
 #+end_src
 
 ** Mark objects
@@ -459,7 +459,7 @@ With \\[universal-argument], copy relative path to project root."
    (t
     (mark-sexp arg t))))
 
-(define-key global-map (kbd "C-M-SPC") #'em--mark-dwim)
+(define-key global-map (kbd "C-M-SPC") #'my/mark-dwim)
 #+end_src
 
 * UI configuration
