@@ -462,6 +462,50 @@ With \\[universal-argument], copy relative path to project root."
 (define-key global-map (kbd "C-M-SPC") #'my/mark-dwim)
 #+end_src
 
+* History and state
+
+** Save and restore desktop session
+
+#+begin_src emacs-lisp
+(my/builtin-package 'desktop
+  (setq desktop-auto-save-timeout 300)  ; 5 min
+  (setq desktop-dirname user-emacs-directory)
+  (setq desktop-base-file-name "desktop")
+  (setq desktop-load-locked-desktop t) ; always load
+  (setq desktop-missing-file-warning nil)
+  (setq desktop-restore-eager 0) ; all files are lazy restored
+  (setq desktop-restore-frames nil) ; don't restore frame
+  (desktop-save-mode 1))
+#+end_src
+
+** Save minibuffer history
+
+#+begin_src emacs-lisp
+(my/builtin-package 'savehist
+  (setq savehist-file (locate-user-emacs-file "savehist"))
+
+  (add-hook 'after-init-hook #'savehist-mode))
+#+end_src
+
+** Record cursor positions
+
+#+begin_src emacs-lisp
+(my/builtin-package 'saveplace
+  (setq save-place-file (locate-user-emacs-file "saveplace"))
+  (save-place-mode 1))
+#+end_src
+
+** Move backup files to central location
+
+#+begin_src emacs-lisp
+(defvar my/backup-dir (expand-file-name "backup/" user-emacs-directory))
+(setq backup-directory-alist `(("." . ,my/backup-dir)))
+(setq backup-by-copying t)
+(setq version-control t)
+(setq delete-old-versions t)
+(setq create-lockfiles nil)
+#+end_src
+
 * UI configuration
 
 ** Basic setup
@@ -576,6 +620,35 @@ With \\[universal-argument], copy relative path to project root."
 (load-theme 'modus-vivendi t)
 #+end_src
 
+* Version control
+
+** Basic setup
+
+#+begin_src emacs-lisp
+(my/builtin-package 'vc
+  (setq vc-follow-symlinks t))
+#+end_src
+
+** Magit setup
+
+#+begin_src emacs-lisp
+(my/external-package 'magit
+  (setq magit-define-global-key-bindings nil)
+
+  ;; Show fine differences for current hunk only.
+  (setq magit-diff-refine-hunk t)
+
+  (global-set-key (kbd "C-x g") #'magit-status)
+  (global-set-key (kbd "C-x M-g") #'magit-dispatch)
+  (global-set-key (kbd "C-c g") #'magit-file-dispatch))
+#+end_src
+
+** Use ssh-agency to remember passphrase
+
+#+begin_src emacs-lisp
+(my/external-package 'ssh-agency
+  (setenv "SSH_ASKPASS" "git-gui--askpass"))
+#+end_src
 
 * Programming
 
@@ -762,6 +835,15 @@ simpler."
 #+begin_src emacs-lisp
 (my/external-package 'gn-mode
   (add-to-list 'auto-mode-alist '("\\.gni?\\'" . gn-mode)))
+#+end_src
+
+** markdown mode
+
+#+begin_src emacs-lisp
+(my/external-package 'markdown-mode
+  (setq markdown-command "multimarkdown")
+
+  (add-to-list 'auto-mode-alist '("README\\.md\\'" . gfm-mode)))
 #+end_src
 
 ** groovy-mode for .groovy file
@@ -990,4 +1072,103 @@ Here is the source code.
                       (org-agenda-overriding-header "\nInbox\n")))
           (tags "CLOSED>=\"<today>\""
                 ((org-agenda-overriding-header "\nCompleted today\n")))))))
+#+end_src
+
+* Elfeed for RSS
+
+#+begin_src emacs-lisp
+(my/external-package 'elfeed
+  (setq elfeed-db-directory (concat user-emacs-directory "elfeed/"))
+  (setq elfeed-search-title-max-width 100)
+  (setq elfeed-show-unique-buffers t)
+  (setq elfeed-feeds
+        '(("https://news.ycombinator.com/rss" news)
+          ("http://blog.chromium.org/atom.xml" blog chromium)
+          ("https://chromereleases.googleblog.com/feeds/posts/default" release chromium)
+          ("https://developer.chrome.com/feeds/blog.xml" chrome)
+          ("https://blog.google/products/chrome/rss" blog chrome)
+          ("https://blogs.windows.com/msedgedev/feed/" blog edge)
+          ("https://randomascii.wordpress.com/feed/" blog)
+          ("http://www.fluentcpp.com/feed/" cpp blog)
+          ("https://www.joelonsoftware.com/feed/" software blog)
+          ("https://herbsutter.com/feed/" cpp blog)
+          ("http://www.modernescpp.com/index.php?format=feed" cpp blog)
+          ("https://googleprojectzero.blogspot.com/feeds/posts/default" blog security)
+          ("https://emacsredux.com/atom.xml" blog emacs)))
+
+  (defvar my/saved-window-configuration nil
+    "Current window configuration before opening elfeed search.")
+
+  (defun my/elfeed-dwim ()
+    "Open elfeed search buffer in maximized window."
+    (interactive)
+    (if (one-window-p)
+        (elfeed)
+      (setq my/saved-window-configuration (current-window-configuration))
+      (delete-other-windows)
+      (elfeed)))
+
+  (defun my/elfeed-search-quit-dwim ()
+    "Close search buffer, restore saved window configuration."
+    (interactive)
+    (elfeed-search-quit-window)
+    (when my/saved-window-configuration
+      (set-window-configuration my/saved-window-configuration)))
+
+  (defun my/elfeed-entry-quit-dwim ()
+    "Kill entry buffer and switch back to *elfeed-search* buffer."
+    (interactive)
+    (unless (one-window-p)
+      (delete-other-windows))
+    (elfeed-kill-buffer)
+    (switch-to-buffer "*elfeed-search*"))
+
+  (define-key global-map (kbd "C-x w") #'my/elfeed-dwim)
+
+  (define-key elfeed-search-mode-map (kbd "q") #'my/elfeed-search-quit-dwim)
+  (define-key elfeed-show-mode-map (kbd "q") #'my/elfeed-entry-quit-dwim))
+#+end_src
+
+* Tie objects - actions with Embark
+
+Thanks to https://karthinks.com/software/fifteen-ways-to-use-embark/
+
+#+begin_src emacs-lisp
+(my/external-package 'embark
+  ;; Optionally replace the key help with a completing-read interface
+  (setq prefix-help-command #'embark-prefix-help-command)
+
+  ;; Hide the mode line of the Embark live/completions buffers
+  (add-to-list 'display-buffer-alist
+               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
+                 nil
+                 (window-parameters (mode-line-format . none))))
+
+  (require 'ace-window)
+  (defmacro my/embark-ace-action (fn)
+    `(defun ,(intern (concat "my/embark-ace-" (symbol-name fn))) ()
+       (interactive)
+       (with-demoted-errors "%s"
+         (let ((aw-dispatch-always t))
+           (aw-switch-to-window (aw-select nil))
+           (call-interactively (symbol-function ',fn))))))
+
+  (my/embark-ace-action find-file)
+  (my/embark-ace-action switch-to-buffer)
+  (my/embark-ace-action bookmark-jump)
+
+  (define-key embark-file-map (kbd "o") #'my/embark-ace-find-file)
+  (define-key embark-buffer-map (kbd "o") #'my/embark-ace-switch-to-buffer)
+  (define-key embark-bookmark-map (kbd "o") #'my/embark-ace-bookmark-jump)
+
+  (define-key global-map (kbd "C-,") #'embark-act)
+
+  (require 'vertico)
+  (define-key vertico-map (kbd "C-M-,") #'embark-export))
+#+end_src
+
+Integration with embark and consult
+
+#+begin_src emacs-lisp
+(my/external-package 'embark-consult)
 #+end_src

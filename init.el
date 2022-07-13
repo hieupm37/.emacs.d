@@ -67,15 +67,9 @@
 ;; Use to keep modeline clean.
 (use-package diminish :ensure t)
 
-(require 'vc)
-(setq vc-follow-symlinks t)
-
 ;; Some basic settings
 (setq ring-bell-function #'ignore)
 (setq initial-buffer-choice t)  ; open *scratch* buffer at startup.
-
-;; Use y/n instead of yes/no
-(defalias 'yes-or-no-p 'y-or-n-p)
 
 (dolist (cmd '(narrow-to-region
                upcase-region
@@ -157,68 +151,9 @@
   :config
   (prefer-coding-system 'utf-8-unix))
 
-;;; History and state
-
-;; Desktop session
-(use-package desktop
-  :config
-  (setq desktop-auto-save-timeout 300)  ; 5 min
-  (setq desktop-dirname user-emacs-directory)
-  (setq desktop-base-file-name "desktop")
-  (setq desktop-load-locked-desktop t) ; always load
-  (setq desktop-missing-file-warning nil)
-  (setq desktop-restore-eager 0) ; all files are lazy restored
-  (setq desktop-restore-frames nil) ; don't restore frame
-  (desktop-save-mode 1))
-
-;; Minibuffer history
-(use-package savehist
-  :config
-  (setq savehist-file (locate-user-emacs-file "savehist"))
-  :hook (after-init-hook . savehist-mode))
-
-;; Record cursor positions
-(use-package saveplace
-  :config
-  (setq save-place-file (locate-user-emacs-file "saveplace"))
-  (save-place-mode 1))
-
-;; Move backup files to central location
-(use-package emacs
-  :config
-  (defvar my/backup-dir (expand-file-name "backup/" user-emacs-directory))
-  (setq backup-directory-alist `(("." . ,my/backup-dir)))
-  (setq backup-by-copying t)
-  (setq version-control t)
-  (setq delete-old-versions t)
-  (setq create-lockfiles nil))
-
 ;; Emacs server
 (use-package server
   :hook (after-init-hook . server-start))
-
-;;; Version control
-
-;; Use ssh agency to remember passphrase
-(use-package ssh-agency
-  :ensure t
-  :config
-  (setenv "SSH_ASKPASS" "git-gui--askpass"))
-
-;; Magit setup
-(use-package magit
-  :ensure t
-  :init
-  (setq magit-define-global-key-bindings nil)
-  :bind (("C-x g" . magit-status)
-         ("C-x M-g" . magit-dispatch)
-         ("C-c g" . magit-file-dispatch)))
-
-;; Show fine differences for current hunk only.
-(use-package magit-diff
-  :after magit
-  :config
-  (setq magit-diff-refine-hunk t))
 
 ;; This is built-in package since Emacs 28
 ;; (use-package project
@@ -252,50 +187,6 @@
 ;;   :bind (("C-x p q" . project-query-replace-regexp)
 ;;    ("C-x p l" . my/project-commit-log)))
 
-;; Tie objects - actions with embark
-;; Thanks to https://karthinks.com/software/fifteen-ways-to-use-embark/
-(use-package embark
-  :ensure t
-  :init
-  ;; Optionally replace the key help with a completing-read interface
-  (setq prefix-help-command #'embark-prefix-help-command)
-  :config
-  ;; Hide the mode line of the Embark live/completions buffers
-  (add-to-list 'display-buffer-alist
-               '("\\`\\*Embark Collect \\(Live\\|Completions\\)\\*"
-                 nil
-                 (window-parameters (mode-line-format . none))))
-
-  (use-package ace-window
-    :config
-    (defmacro my/embark-ace-action (fn)
-      `(defun ,(intern (concat "my/embark-ace-" (symbol-name fn))) ()
-         (interactive)
-         (with-demoted-errors "%s"
-           ;; (require 'ace-window)
-           (let ((aw-dispatch-always t))
-             (aw-switch-to-window (aw-select nil))
-             (call-interactively (symbol-function ',fn))))))
-
-    (my/embark-ace-action find-file)
-    (my/embark-ace-action switch-to-buffer)
-    (my/embark-ace-action bookmark-jump)
-
-    :bind (:map embark-file-map
-                ("o" . my/embark-ace-find-file)
-                :map embark-buffer-map
-                ("o" . my/embark-ace-switch-to-buffer)
-                :map embark-bookmark-map
-                ("o" . my/embark-ace-bookmark-jump)))
-
-  :bind (("C-," . embark-act)
-         :map vertico-map
-         ("C-M-," . embark-export)))
-
-(use-package embark-consult
-  :ensure t
-  :after embark, consult)
-
 ;; Compile directly from Emacs
 ;; (use-package compile
 ;;   :config
@@ -316,65 +207,6 @@
   :ensure t)
 
 ;; Elfeed - RSS reader
-(use-package elfeed
-  :ensure t
-  :config
-  (setq elfeed-db-directory (concat user-emacs-directory "elfeed/"))
-  (setq elfeed-search-title-max-width 100)
-  (setq elfeed-show-unique-buffers t)
-  (setq elfeed-feeds
-        '(("https://news.ycombinator.com/rss" news)
-          ("http://blog.chromium.org/atom.xml" blog chromium)
-          ("https://chromereleases.googleblog.com/feeds/posts/default" release chromium)
-          ("https://developer.chrome.com/feeds/blog.xml" chrome)
-          ("https://blog.google/products/chrome/rss" blog chrome)
-          ("https://blogs.windows.com/msedgedev/feed/" blog edge)
-          ("https://randomascii.wordpress.com/feed/" blog)
-          ("http://www.fluentcpp.com/feed/" cpp blog)
-          ("https://www.joelonsoftware.com/feed/" software blog)
-          ("https://herbsutter.com/feed/" cpp blog)
-          ("http://www.modernescpp.com/index.php?format=feed" cpp blog)
-          ("https://googleprojectzero.blogspot.com/feeds/posts/default" blog security)
-          ("https://emacsredux.com/atom.xml" blog emacs)))
-
-  (defvar my/saved-window-configuration nil
-    "Current window configuration before opening elfeed search.")
-
-  (defun my/elfeed-dwim ()
-    "Open elfeed search buffer in maximized window."
-    (interactive)
-    (if (one-window-p)
-        (elfeed)
-      (setq my/saved-window-configuration (current-window-configuration))
-      (delete-other-windows)
-      (elfeed)))
-
-  (defun my/elfeed-search-quit-dwim ()
-    "Close search buffer, restore saved window configuration."
-    (interactive)
-    (elfeed-search-quit-window)
-    (when my/saved-window-configuration
-      (set-window-configuration my/saved-window-configuration)))
-
-  (defun my/elfeed-entry-quit-dwim ()
-    "Kill entry buffer and switch back to *elfeed-search* buffer."
-    (interactive)
-    (unless (one-window-p)
-      (delete-other-windows))
-    (elfeed-kill-buffer)
-    (switch-to-buffer "*elfeed-search*"))
-
-  :bind (("C-x w" . my/elfeed-dwim)
-         :map elfeed-search-mode-map
-         ("q" . my/elfeed-search-quit-dwim)
-         :map elfeed-show-mode-map
-         ("q" . my/elfeed-entry-quit-dwim)))
-
-(use-package markdown-mode
-  :ensure t
-  :mode ("README\\.md\\'" . gfm-mode)
-  :init (setq markdown-command "multimarkdown"))
-
 ;;; Load emacs config from emacs-init.org file.
 
 ;; An "el" version of my Org configuration is created as a final step when
