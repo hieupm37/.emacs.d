@@ -1009,7 +1009,7 @@ Here is the source code.
 
 ;; TODO
 (setq org-todo-keywords
-      '((sequence "TODO(t)" "NEXT(n)" "HOLD(h" "|" "DONE(d)" "CANCEL(c)")))
+      '((sequence "TODO(t)" "NEXT(n)" "HOLD(h)" "|" "DONE(d)" "CANCEL(c)")))
 
 (setq org-log-done 'time)
 (defun my/log-todo-next-creation-date (&rest ignore)
