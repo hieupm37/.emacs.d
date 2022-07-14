@@ -475,6 +475,10 @@ With \\[universal-argument], copy relative path to project root."
   (setq desktop-missing-file-warning nil)
   (setq desktop-restore-eager 0) ; all files are lazy restored
   (setq desktop-restore-frames nil) ; don't restore frame
+
+  ;; Don't save for these mode
+  (add-to-list 'desktop-modes-not-to-save 'dired-mode)
+
   (desktop-save-mode 1))
 #+end_src
 
