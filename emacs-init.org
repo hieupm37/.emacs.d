@@ -946,6 +946,13 @@ simpler."
 (my/external-package 'restclient)
 #+end_src
 
+** bazel mode
+
+#+begin_src emacs-lisp
+(my/external-package 'bazel
+  (add-to-list 'auto-mode-alist '("\\WORKSPACE\\BUILD.bazel'" . bazel-mode)))
+#+end_src
+
 * Org mode configuration
 
 Keyboard bindings table for org mode
