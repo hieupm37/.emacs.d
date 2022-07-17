@@ -52,70 +52,6 @@
         "Run `my/ensure-external-packages-installed' to manually install missing package"
         :warning))))
 
-(my/external-package 'use-package
-  (setq use-package-always-ensure nil)
-  (setq use-package-always-defer nil)
-  (setq use-package-always-demand nil)
-  (setq use-package-expand-minimally nil)
-  ;; Let imenu see `use-package' declarations.
-  (setq use-package-enable-imenu-support t)
-  (setq use-package-compute-statistics nil)
-  ;; Write hooks using their real name instead of shorter version.
-  ;; For example: after-init => `after-init-hook'
-  (setq use-package-hook-name-suffix nil))
-
-;; Use to keep modeline clean.
-(use-package diminish :ensure t)
-
-;; Some basic settings
-(setq ring-bell-function #'ignore)
-(setq initial-buffer-choice t)  ; open *scratch* buffer at startup.
-
-(dolist (cmd '(narrow-to-region
-               upcase-region
-               downcase-region
-               dired-find-alternate-file
-               narrow-to-page
-               set-goal-column
-               scroll-left
-               scroll-right))
-  (put cmd 'disabled nil))
-(put 'suspend-frame 'disabled t)
-(put 'overwrite-mode 'disabled t)
-
-;;; Disable some annoying default key bindings.
-(use-package emacs
-  :bind (("<insert>" . nil)
-         ("C-z" . nil)
-         ("C-x C-z" . nil)
-         ("C-h h" . nil)
-         ("M-`" . nil)))
-
-;; Use ace-window to switch between windows
-(use-package ace-window
-  :ensure t
-  :bind ("M-o" . ace-window))
-
-(use-package eldoc :diminish)
-
-;; Move custom variables to temporary file to make init.el clean.
-(use-package cus-edit
-  :config
-  (setq custom-file (make-temp-file "emacs-custom-")))
-
-;; Disable bidrectional writing might improve Emacs responsive some cases.
-(setq-default bidi-paragraph-direction 'left-to-right)
-(setq bidi-inhibit-bpa t)
-
-;; Better handle very long lines in Emacs.
-(use-package so-long
-  :config
-  (global-so-long-mode 1))
-
-;; Typed text replace the selection
-(use-package delsel
-  :hook (after-init-hook . delete-selection-mode))
-
 ;; (use-package replace
 ;;   :config
 ;;   (setq list-matching-lines-jump-to-current-line t)
@@ -145,15 +81,6 @@
 ;;   (setq xref-show-xrefs-function #'xref-show-definitions-buffer) ; for grep
 ;;   (setq xref-file-name-display 'project-relative)
 ;;   (setq xref-search-program 'gitgrep))
-
-;; Prefer unix encoding when create new file.
-(use-package emacs
-  :config
-  (prefer-coding-system 'utf-8-unix))
-
-;; Emacs server
-(use-package server
-  :hook (after-init-hook . server-start))
 
 ;; This is built-in package since Emacs 28
 ;; (use-package project
@@ -200,13 +127,6 @@
 ;;           (cd project_root)
 ;;           (compile "ninja -C src\\out\\Debug chrome"))))))
 
-;;; Applications and utilities
-
-;; Restclient
-(use-package restclient
-  :ensure t)
-
-;; Elfeed - RSS reader
 ;;; Load emacs config from emacs-init.org file.
 
 ;; An "el" version of my Org configuration is created as a final step when
@@ -229,6 +149,10 @@
         (delete-file filepath)
         (message (format "%s has deleted" filepath))))))
 (add-hook 'after-save-hook #'my/delete-emacs-init-el-if-needed)
+
+;; Start Emacs server when done
+(my/builtin-package 'server
+  (add-hook 'after-init-hook #'server-start))
 
 ;; Make GC pauses faster by decreasing the threshold.
 (setq gc-cons-threshold (* 2 1000 1000))

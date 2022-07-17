@@ -2,7 +2,58 @@
 #+AUTHOR: hieupm37
 #+EMAIL: hieupm37@gmail.com
 
+* Basic
+
++ Hide minor mode in modeline with diminish
+#+begin_src emacs-lisp
+(my/external-package 'diminish
+  (diminish 'eldoc))
+#+end_src
+
++ Disable some unused default functions to prevent mistakenly invoking by keyboard.
+#+begin_src emacs-lisp
+(dolist (cmd '(narrow-to-region
+               upcase-region
+               downcase-region
+               dired-find-alternate-file
+               narrow-to-page
+               set-goal-column
+               scroll-left
+               scroll-right))
+  (put cmd 'disabled nil))
+(put 'suspend-frame 'disabled t)
+(put 'overwrite-mode 'disabled t)
+
+(define-key global-map (kbd "<insert>") nil)
+(define-key global-map (kbd "C-z") nil)
+(define-key global-map (kbd "C-x C-z") nil)
+(define-key global-map (kbd "C-h h") nil)
+(define-key global-map (kbd "M-`") nil)
+#+end_src
+
++ Don't ring a bell when error happens
+#+begin_src emacs-lisp
+(setq ring-bell-function #'ignore)
+#+end_src
+
++ Open scratch buffer instead of welcome at launch.
+#+begin_src emacs-lisp
+(setq initial-buffer-choice t)  ; open *scratch* buffer at startup.
+#+end_src
+
++ Move custom file to temporary file to make init.el clean
+#+begin_src emacs-lisp
+(my/builtin-package 'cus-edit
+  (setq custom-file (make-temp-file "emacs-custom-")))
+#+end_src
+
 * Buffer configuration
+
++ Move around with ace-window
+#+begin_src emacs-lisp
+(my/external-package 'ace-window
+  (define-key global-map (kbd "M-o") #'ace-window))
+#+end_src
 
 + Copy buffer file name to clipboard. The copied result is relative with project root path.
 
@@ -66,6 +117,9 @@ With \\[universal-argument], copy relative path to project root."
 
 #+begin_src emacs-lisp
 (my/external-package 'beginend
+  ;; Hide this mode from modeline
+  (diminish 'beginend-global-mode)
+  (dolist (mode beginend-modes) (diminish (cdr mode)))
   (beginend-global-mode))
 #+end_src
 
@@ -357,6 +411,29 @@ With \\[universal-argument], copy relative path to project root."
 #+end_src
 
 * Editing
+
++ Prefer unix encoding when create new file
+#+begin_src emacs-lisp
+(prefer-coding-system 'utf-8-unix)
+#+end_src
+
++ Disable bidirectional writing might improve Emacs responsive in some cases.
+#+begin_src emacs-lisp
+(setq-default bidi-paragraph-direction 'left-to-right)
+(setq bidi-inhibit-bpa t)
+#+end_src
+
++ Improve handling very long lines in Emacs
+#+begin_src emacs-lisp
+(my/builtin-package 'so-long
+  (global-so-long-mode 1))
+#+end_src
+
++ Typed text replaces the selection
+#+begin_src emacs-lisp
+(my/builtin-package 'delsel
+  (add-hook 'after-init-hook #'delete-selection-mode))
+#+end_src
 
 + Save existing clipboard text into the kill-ring before replacing it.
   It can be retrived via C-y or M-y.
@@ -862,6 +939,11 @@ simpler."
 #+begin_src emacs-lisp
 (my/external-package 'dotenv-mode
   (add-to-list 'auto-mode-alist '("\\.env\\..*\\'" . dotenv-mode)))
+#+end_src
+
+** restclient mode for HTTP
+#+begin_src emacs-lisp
+(my/external-package 'restclient)
 #+end_src
 
 * Org mode configuration
