@@ -667,7 +667,7 @@ With \\[universal-argument], copy relative path to project root."
   (let* ((dpi (my/screen-dpi-of-frame (selected-frame)))
          (font-size (cond
                      ((< dpi 96) 12)
-                     ((< dpi 160) 14)
+                     ((< dpi 160) 12)
                      (t 16))))
     (if (eq system-type 'windows-nt)
         (set-frame-font (format "Consolas %s" font-size))
