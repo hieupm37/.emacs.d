@@ -1075,14 +1075,8 @@ Here is the source code.
 
 (setq org-refile-use-outline-path 'file)
 (setq org-outline-path-complete-in-steps nil)
-(setq org-refile-use-cache t)
 (setq org-refile-targets
       '(("projects.org" :regexp . "\\(?:\\(?:Note\\|Task\\)s\\)")))
-
-;; Regenerate refile cache everytime Emacs has been idled for 5 minutes
-(run-with-idle-timer 300 t (lambda ()
-                             (org-refile-cache-clear)
-                             (org-refile-get-targets)))
 
 ;; Automatic save after refilling
 (defun my/gtd-save-org-buffers ()
