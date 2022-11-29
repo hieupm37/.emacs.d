@@ -1203,7 +1203,9 @@ Here is the source code.
           ("https://herbsutter.com/feed/" cpp blog)
           ("http://www.modernescpp.com/index.php?format=feed" cpp blog)
           ("https://googleprojectzero.blogspot.com/feeds/posts/default" blog security)
-          ("https://emacsredux.com/atom.xml" blog emacs)))
+          ("https://emacsredux.com/atom.xml" blog emacs)
+          ("https://nghiencuuquocte.org/feed/" news)
+          ("https://feeds.feedburner.com/abseilio")))
 
   (defvar my/saved-window-configuration nil
     "Current window configuration before opening elfeed search.")
