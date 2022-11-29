@@ -949,6 +949,7 @@ simpler."
 
 #+begin_src emacs-lisp
 (my/external-package 'groovy-mode
+  (setq groovy-indent-offset 2)
   (add-to-list 'auto-mode-alist '("\\.groovy\\'" . groovy-mode)))
 #+end_src
 
