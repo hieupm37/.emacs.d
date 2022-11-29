@@ -795,6 +795,58 @@ With \\[universal-argument], copy relative path to project root."
   (add-hook 'prog-mode-hook #'display-fill-column-indicator-mode))
 #+end_src
 
++ Tree sitter
+
+#+begin_src emacs-lisp
+(my/external-package 'tree-sitter
+  (my/external-package 'tree-sitter-langs
+    ;; Install langs packages for tree-sitter.
+    )
+
+  ;; Use tree sitter mode globally for all supported major modes.
+  (global-tree-sitter-mode)
+  ;; Enable tree sitter highlight mode whenever possible.
+  (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
+
+  (setq my/tree-sitter-class-like '((c++-mode . (class_definition))))
+  (setq my/tree-sitter-function-like '((c++-mode . (function_definition))))
+  (defun my/tree-sitter-thing-name (kind)
+    "Get name of tree-sitter KIND thing."
+    (when-let (tree-sitter-mode
+               (node-types (pcase kind
+                             ('class-like my/tree-sitter-class-like)
+                             ('function-like my/tree-sitter-function-like)))
+               (node-at-point (cl-some #'tree-sitter-node-at-point
+                                       (alist-get major-mode node-types)))
+               (node-name (tsc-get-child-by-field node-at-point :name)))
+      (tsc-node-text node-name)))
+
+  ;; mode-line-idle requires emacs-20.1
+  ;; (my/external-package 'mode-line-idle
+  ;;   (setq-default header-line-format
+  ;;                 (list
+  ;;                  '(:eval (mode-line-idle 0.3
+  ;;                                          '(:propertize (:eval
+  ;;                                                         (if (boundp 'tree-sitter-mode)
+  ;;                                                             (let ((thing-name (my/tree-sitter-thing-name 'class-like)))
+  ;;                                                               (if thing-name (format ":%s" thing-name)))))
+  ;;                                                        face
+  ;;                                                        hima-simple-gray)
+  ;;                                          ""))
+  ;;                  '(:eval (mode-line-idle 0.3
+  ;;                                          '(:propertize (:eval
+  ;;                                                         (if (boundp 'tree-sitter-mode)
+  ;;                                                             (let ((thing-name (my/tree-sitter-thing-name 'function-like)))
+  ;;                                                               (if thing-name (format ":%s" thing-name)))))
+  ;;                                                        face
+  ;;                                                        hima-simple-gray)
+  ;;                                          ""))
+  ;;                  )
+  ;;                 )
+  ;;   )
+  )
+#+end_src
+
 ** C++ development
 
 + Auto-detect mode for header file
@@ -899,10 +951,10 @@ simpler."
 
 + Font lock for modern c++
 
-#+begin_src emacs-lisp
+#+begin_example emacs-lisp
 (my/external-package 'modern-cpp-font-lock
   (add-hook 'c++-mode-hook #'modern-c++-font-lock-mode))
-#+end_src
+#+end_example
 
 ** js-mode for .js, .ts file
 
