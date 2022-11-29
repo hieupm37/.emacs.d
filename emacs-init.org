@@ -921,6 +921,14 @@ simpler."
   (setq sgml-basic-offset 2))
 #+end_src
 
+** python mode
+
+#+begin_src emacs-lisp
+(my/builtin-package 'python
+  (add-hook 'python-mode-hook '(lambda ()
+                                 (setq python-indent 2))))
+#+end_src
+
 ** gn-mode for .gni? file
 
 #+begin_src emacs-lisp
