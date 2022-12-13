@@ -809,7 +809,7 @@ With \\[universal-argument], copy relative path to project root."
 
 + Tree sitter
 
-#+begin_src emacs-lisp
+#+begin_example emacs-lisp
 (my/external-package 'tree-sitter
   (my/external-package 'tree-sitter-langs
     ;; Install langs packages for tree-sitter.
@@ -840,7 +840,7 @@ With \\[universal-argument], copy relative path to project root."
          (lambda () (my/tree-sitter-thing-name 'function-like))
          (lambda () (my/tree-sitter-thing-name 'class-like))))
   )
-#+end_src
+#+end_example
 
 ** C++ development
 
