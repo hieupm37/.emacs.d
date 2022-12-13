@@ -798,7 +798,13 @@ With \\[universal-argument], copy relative path to project root."
 + Show current function in mode line
 
 #+begin_src emacs-lisp
-(which-function-mode 1)
+(my/builtin-package 'which-func
+  (which-function-mode 1)
+
+  (setq which-func-modes '(org-mode
+                           c++-mode
+                           python-mode
+                           emacs-lisp-mode)))
 #+end_src
 
 + Tree sitter
