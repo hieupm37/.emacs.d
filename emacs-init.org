@@ -976,15 +976,15 @@ simpler."
   (add-to-list 'auto-mode-alist '("\\.py\\'" . python-ts-mode))
 
   ;; Try to guess indent offset if the current indentation in the file is not 2.
-  (add-hook 'python-ts-mode-hook '(lambda() ()
-                                    (setq python-indent-offset 2)
-                                    (python-indent-guess-indent-offset))))
+  (add-hook 'python-ts-mode-hook (lambda() ()
+                                   (setq python-indent-offset 2)
+                                   (python-indent-guess-indent-offset))))
 #+end_src
 
 #+begin_example emacs-lisp
 (my/builtin-package 'python
-  (add-hook 'python-mode-hook '(lambda ()
-                                 (setq python-indent 2))))
+  (add-hook 'python-mode-hook (lambda ()
+                                (setq python-indent 2))))
 #+end_example
 
 ** gn-mode for .gni? file
