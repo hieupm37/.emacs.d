@@ -467,6 +467,23 @@ With \\[universal-argument], copy relative path to project root."
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 #+end_src
 
++ Undo tree to manage undo/redo
+
+| Command | Bindings |
+|---------+----------|
+| Undo    | C-/      |
+| Redo    | C-?      |
+
+#+begin_src emacs-lisp
+(my/external-package 'undo-tree
+  (global-undo-tree-mode)
+
+  (defvar my/undo-tree--history-directory (concat user-emacs-directory "undo/"))
+  (unless (file-exists-p my/undo-tree--history-directory)
+    (make-directory my/undo-tree--history-directory t))
+  (setq undo-tree-history-directory-alist `(("." . ,my/undo-tree--history-directory))))
+#+end_src
+
 ** General commands for lines
 
 #+begin_src emacs-lisp
