@@ -130,6 +130,62 @@ With \\[universal-argument], copy relative path to project root."
   (define-key global-map (kbd "C-z") #'goto-last-change))
 #+end_src
 
++ Scratch buffers
+
+#+begin_src emacs-lisp
+(defun my/scratch--list-modes ()
+  "List known major modes."
+  (cl-loop for sym the symbols of obarray
+           when (and (functionp sym)
+                     (provided-mode-derived-p sym 'prog-mode))
+           collect sym))
+
+(defun my/scratch--buffer-setup (region &optional mode)
+  "Add contents to `scratch' buffer and name it accordingly.
+
+REGION is added to the contents to the new buffer.
+
+Use the current buffer's major mode by default.  With optional
+MODE use that major mode instead."
+  (let* ((major (or mode major-mode))
+         (string (format "Scratch buffer for: %s\n\n" major))
+         (text (concat string region))
+         (buf (format "*Scratch for %s*" major)))
+    (with-current-buffer (get-buffer-create buf)
+      (funcall major)
+	  (save-excursion
+        (insert text)
+        (goto-char (point-min))
+        (comment-region (point-at-bol) (point-at-eol)))
+	  (vertical-motion 2))
+    (pop-to-buffer buf)))
+
+(defun my/scratch-buffer (&optional arg)
+  "Produce a bespoke scratch buffer matching current major mode.
+
+With optional ARG as a prefix argument (\\[universal-argument]),
+prompt for a major mode with completion.
+
+If region is active, copy its contents to the new scratch
+buffer."
+  (interactive "P")
+  (let* ((modes (my/scratch--list-modes))
+         (region (with-current-buffer (current-buffer)
+                   (if (region-active-p)
+                       (buffer-substring-no-properties
+                        (region-beginning)
+                        (region-end))
+                     "")))
+         (m))
+    (pcase (prefix-numeric-value arg)
+      (4 (progn
+            (setq m (intern (completing-read "Select major mode: " modes nil t)))
+            (my/scratch--buffer-setup region m)))
+      (_ (my/scratch--buffer-setup region)))))
+
+(global-set-key (kbd "C-c s") #'my/scratch-buffer)
+#+end_src
+
 ** ibuffer configuration
 
 #+begin_src emacs-lisp
