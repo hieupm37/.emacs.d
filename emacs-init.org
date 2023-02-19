@@ -294,9 +294,6 @@ buffer."
 (my/external-package 'consult
   (setq consult-narrow-key ">")
   (setq completion-in-region-function #'consult-completion-in-region)
-  ;; Use completing-read-multiple provided by consult
-  (advice-add #'completing-read-multiple
-              :override #'consult-completing-read-multiple)
 
   (defun my/consult-project-root ()
     "Returns patht to project or `default-directory'."
