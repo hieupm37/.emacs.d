@@ -1,0 +1,3 @@
+[submodule "third_party/denote-menu"]
+	path = third_party/denote-menu
+	url = https://github.com/namilus/denote-menu.git
