@@ -785,7 +785,7 @@ buffer."
   ;; Disable all other themes to avoid awkward blending:
   (mapc #'disable-theme custom-enabled-themes)
 
-  (load-theme 'standard-dark :no-confirm)
+  (load-theme 'standard-light :no-confirm)
 
   (define-key global-map (kbd "<f5>") #'standard-themes-toggle))
 #+end_src
