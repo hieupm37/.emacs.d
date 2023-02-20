@@ -1343,7 +1343,9 @@ Here is the source code.
           ("https://googleprojectzero.blogspot.com/feeds/posts/default" blog security)
           ("https://emacsredux.com/atom.xml" blog emacs)
           ("https://nghiencuuquocte.org/feed/" news)
-          ("https://feeds.feedburner.com/abseilio")))
+          ("https://feeds.feedburner.com/abseilio")
+          ("http://feeds.feedburner.com/GoogleOnlineSecurityBlog" blog chrome)
+          ("https://engineering.fb.com/feed/" blog)))
 
   (defvar my/saved-window-configuration nil
     "Current window configuration before opening elfeed search.")
