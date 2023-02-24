@@ -710,6 +710,21 @@ buffer."
 ** Font
 
 #+begin_src emacs-lisp
+(my/external-package 'fontaine
+  (setq fontaine-latest-state-file
+        (locate-user-emacs-file "fontaine-latest-state.eld"))
+  (setq fontaine-presets
+        '((regular
+           :default-family "JetBrains Mono"
+           :default-height 110
+           :default-weight normal
+           :line-spacing 0.2)))
+
+  (fontaine-set-preset (or (fontaine-restore-latest-preset) 'regular))
+  (add-hook 'kill-emacs-hook #'fontaine-store-latest-preset))
+#+end_src
+
+#+begin_example
 ;; Setup font size based on the DPI of screen
 (defun my/screen-dpi-of-frame (&optional frame)
   "Get the DPI of the frame (or the current if nil)."
@@ -736,15 +751,15 @@ buffer."
   (interactive)
   (let* ((dpi (my/screen-dpi-of-frame (selected-frame)))
          (font-size (cond
-                     ((< dpi 96) 12)
+                     ((< dpi 96) 13)
                      ((< dpi 160) 12)
                      (t 16))))
     (if (eq system-type 'windows-nt)
-        (set-frame-font (format "Consolas %s" font-size))
+        (set-frame-font (format "JetBrains Mono %s" font-size))
       (set-frame-font (format "Source Code Pro %s" font-size)))))
 
 (add-hook 'after-init-hook #'my/setup-font)
-#+end_src
+#+end_example
 
 ** Theme
 
