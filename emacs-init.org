@@ -707,6 +707,14 @@ buffer."
   (advice-add 'yes-or-no-p :override #'y-or-n-p))
 #+end_src
 
++ Highlight current lines after jumping position
+
+#+begin_src emacs-lisp
+(my/external-package 'pulsar
+  (pulsar-global-mode 1)
+  (add-hook 'minibuffer-setup-hook #'pulsar-pulse-line))
+#+end_src
+
 ** Font
 
 #+begin_src emacs-lisp
