@@ -613,7 +613,7 @@ buffer."
 
 ** Save and restore desktop session
 
-#+begin_src emacs-lisp
+#+begin_example emacs-lisp
 (my/builtin-package 'desktop
   (setq desktop-auto-save-timeout 300)  ; 5 min
   (setq desktop-dirname user-emacs-directory)
@@ -627,7 +627,7 @@ buffer."
   (add-to-list 'desktop-modes-not-to-save 'dired-mode)
 
   (desktop-save-mode 1))
-#+end_src
+#+end_example
 
 ** Save minibuffer history
 
