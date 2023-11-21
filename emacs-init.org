@@ -534,7 +534,10 @@ buffer."
   (defvar my/undo-tree--history-directory (concat user-emacs-directory "undo/"))
   (unless (file-exists-p my/undo-tree--history-directory)
     (make-directory my/undo-tree--history-directory t))
-  (setq undo-tree-history-directory-alist `(("." . ,my/undo-tree--history-directory))))
+  (setq undo-tree-history-directory-alist `(("." . ,my/undo-tree--history-directory)))
+  ;; Turn off undo-tree-history to save space
+  (setq undo-tree-auto-save-history nil))
+
 #+end_src
 
 ** General commands for lines
