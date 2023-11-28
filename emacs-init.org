@@ -1100,6 +1100,13 @@ simpler."
   (add-to-list 'auto-mode-alist '("\\.gni?\\'" . gn-mode)))
 #+end_src
 
+** mojom mode for .mojom file
+
+#+begin_src emacs-lisp
+(add-to-list 'load-path (expand-file-name "third_party/mojom" user-emacs-directory))
+(require 'mojom-mode)
+#+end_src
+
 ** markdown mode
 
 #+begin_src emacs-lisp
