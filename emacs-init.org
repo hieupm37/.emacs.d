@@ -520,6 +520,14 @@ buffer."
 (add-hook 'before-save-hook #'delete-trailing-whitespace)
 #+end_src
 
++ Prevent add changes in minibuffer to kill ring
+
+#+begin_src emacs-lisp
+(add-hook 'minibuffer-setup-hook'
+          (lambda ()
+            (make-local-variable 'kill-ring)))
+#+end_src
+
 + Undo tree to manage undo/redo
 
 | Command | Bindings |
